@@ -1,0 +1,73 @@
+@baseUrl = http://localhost:8080
+@password = Password123!
+
+### Login admin
+# @name adminLogin
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@bankcore.local",
+  "password": "{{password}}"
+}
+
+### Login employee
+# @name employeeLogin
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "employee@bankcore.local",
+  "password": "{{password}}"
+}
+
+### Login Alice
+# @name aliceLogin
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@bankcore.local",
+  "password": "{{password}}"
+}
+
+### Current user
+GET {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer {{aliceLogin.response.body.accessToken}}
+
+### Alice accounts
+GET {{baseUrl}}/api/v1/accounts
+Authorization: Bearer {{aliceLogin.response.body.accessToken}}
+
+### Employee deposit into Alice CHF account
+POST {{baseUrl}}/api/v1/accounts/20000000-0000-0000-0000-000000000001/deposit
+Authorization: Bearer {{employeeLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "amount": 250.00,
+  "currency": "CHF",
+  "description": "Desk cash deposit",
+  "allowFrozenAdminOverride": false
+}
+
+### Alice transfers to Bob
+POST {{baseUrl}}/api/v1/transfers
+Authorization: Bearer {{aliceLogin.response.body.accessToken}}
+Content-Type: application/json
+
+{
+  "sourceAccountId": "20000000-0000-0000-0000-000000000001",
+  "targetAccountId": "20000000-0000-0000-0000-000000000003",
+  "amount": 100.00,
+  "currency": "CHF",
+  "description": "Internal transfer demo"
+}
+
+### Employee views alerts
+GET {{baseUrl}}/api/v1/alerts
+Authorization: Bearer {{employeeLogin.response.body.accessToken}}
+
+### Admin dashboard
+GET {{baseUrl}}/api/v1/admin/dashboard
+Authorization: Bearer {{adminLogin.response.body.accessToken}}

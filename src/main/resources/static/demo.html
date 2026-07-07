@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BankCore API - Console de test</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fa;
+      --panel: #ffffff;
+      --text: #172033;
+      --muted: #647086;
+      --line: #d9dee8;
+      --primary: #136f63;
+      --primary-dark: #0c5249;
+      --danger: #b42318;
+      --warning: #9a5b00;
+      --ok: #0a7c4a;
+      --code: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.4;
+    }
+
+    header {
+      background: #101828;
+      color: #fff;
+      padding: 18px 24px;
+      border-bottom: 4px solid var(--primary);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    header p {
+      margin: 4px 0 0;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
+    main {
+      width: min(1280px, calc(100% - 32px));
+      margin: 20px auto 48px;
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    section,
+    aside {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+    }
+
+    aside {
+      padding: 16px;
+      align-self: start;
+      position: sticky;
+      top: 16px;
+    }
+
+    .content {
+      display: grid;
+      gap: 16px;
+    }
+
+    section {
+      padding: 16px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    h3 {
+      margin: 16px 0 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: var(--text);
+      background: #fff;
+      font: inherit;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    button,
+    a.button {
+      min-height: 38px;
+      border: 1px solid var(--primary);
+      border-radius: 6px;
+      padding: 8px 11px;
+      color: #fff;
+      background: var(--primary);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:hover,
+    a.button:hover {
+      background: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+
+    button.secondary,
+    a.secondary {
+      color: var(--text);
+      background: #fff;
+      border-color: var(--line);
+    }
+
+    button.secondary:hover,
+    a.secondary:hover {
+      background: #f8fafc;
+      border-color: #b8c0cf;
+    }
+
+    button.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .status {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      min-height: 26px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      color: var(--muted);
+    }
+
+    .pill.ok {
+      color: var(--ok);
+      background: #ecfdf3;
+      border-color: #abefc6;
+    }
+
+    .pill.warn {
+      color: var(--warning);
+      background: #fffaeb;
+      border-color: #fedf89;
+    }
+
+    .pill.bad {
+      color: var(--danger);
+      background: #fef3f2;
+      border-color: #fecdca;
+    }
+
+    .kv {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .kv div {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .kv span:first-child {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    code,
+    pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    pre {
+      max-height: 440px;
+      overflow: auto;
+      margin: 0;
+      padding: 12px;
+      color: #d1d5db;
+      background: var(--code);
+      border-radius: 8px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      background: #f8fafc;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .result-head h2 {
+      margin: 0;
+    }
+
+    .nowrap {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 900px) {
+      main,
+      .split,
+      .grid,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>BankCore API - Console de test</h1>
+    <p>Interface locale pour tester les vrais endpoints REST, les JWT, les roles et les operations bancaires.</p>
+  </header>
+
+  <main>
+    <aside>
+      <h2>Session</h2>
+      <div class="status">
+        <span id="apiStatus" class="pill warn">API non testee</span>
+        <span id="authStatus" class="pill warn">Non connecte</span>
+      </div>
+
+      <div class="grid">
+        <button onclick="checkHealth()">Health</button>
+        <a class="button secondary" href="http://localhost:8080/swagger-ui/index.html" target="_blank" rel="noreferrer">Swagger</a>
+      </div>
+
+      <h3>Comptes demo</h3>
+      <div class="actions">
+        <button onclick="loginAs('admin')">Admin</button>
+        <button onclick="loginAs('employee')">Employee</button>
+        <button onclick="loginAs('reviewer')">Reviewer</button>
+        <button onclick="loginAs('alice')">Alice</button>
+        <button onclick="loginAs('bob')">Bob</button>
+        <button onclick="loginAs('claire')">Claire</button>
+        <button onclick="loginAs('diego')">Diego</button>
+        <button onclick="loginAs('emma')">Emma</button>
+        <button onclick="loginAs('sofia')">Sofia</button>
+      </div>
+
+      <div id="sessionInfo" class="kv">
+        <div><span>Email</span><span>-</span></div>
+        <div><span>Role</span><span>-</span></div>
+        <div><span>User ID</span><span>-</span></div>
+        <div><span>Token</span><span>-</span></div>
+      </div>
+
+      <button class="secondary" onclick="clearSession()">Deconnexion locale</button>
+
+      <h3>Parcours rapide</h3>
+      <div class="actions">
+        <button onclick="runSmokeTest()">Tester tout</button>
+        <button class="secondary" onclick="testForbiddenAccess()">Tester 403 client</button>
+      </div>
+
+      <p class="muted">
+        Le bouton 403 connecte Alice puis tente le dashboard admin. Le resultat attendu est un refus d'acces.
+      </p>
+    </aside>
+
+    <div class="content">
+      <section>
+        <h2>Actions principales</h2>
+        <div class="grid-3">
+          <button onclick="getMe()">GET /auth/me</button>
+          <button onclick="loadAccounts()">GET /accounts</button>
+          <button onclick="loadCustomers()">GET /customers</button>
+          <button onclick="loadDashboard()">GET /admin/dashboard</button>
+          <button onclick="loadAlerts()">GET /alerts</button>
+          <button onclick="loadAuditLogs()">GET /audit-logs</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Comptes bancaires</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Selection</th>
+                <th>IBAN</th>
+                <th>Type</th>
+                <th>Devise</th>
+                <th>Solde</th>
+                <th>Statut</th>
+                <th>Customer</th>
+              </tr>
+            </thead>
+            <tbody id="accountsTable">
+              <tr><td colspan="7" class="muted">Charge les comptes avec le bouton GET /accounts.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="actions">
+          <button class="secondary" onclick="loadSelectedTransactions()">Transactions du compte</button>
+          <button class="secondary" onclick="loadSelectedStatement()">Releve du compte</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Operations</h2>
+        <div class="split">
+          <div>
+            <h3>Depot / retrait admin</h3>
+            <div class="grid">
+              <label>Compte
+                <select id="operationAccount"></select>
+              </label>
+              <label>Devise
+                <select id="operationCurrency">
+                  <option>CHF</option>
+                  <option>EUR</option>
+                  <option>USD</option>
+                </select>
+              </label>
+              <label>Montant
+                <input id="operationAmount" type="number" min="0.01" step="0.01" value="25.00">
+              </label>
+              <label>Description
+                <input id="operationDescription" value="Test depuis demo.html">
+              </label>
+            </div>
+            <div class="actions">
+              <button onclick="deposit()">Depot</button>
+              <button class="secondary" onclick="withdraw()">Retrait</button>
+            </div>
+          </div>
+
+          <div>
+            <h3>Virement interne</h3>
+            <div class="grid">
+              <label>Compte source
+                <select id="transferSource"></select>
+              </label>
+              <label>Compte cible
+                <select id="transferTarget"></select>
+              </label>
+              <label>Devise
+                <select id="transferCurrency">
+                  <option>CHF</option>
+                  <option>EUR</option>
+                  <option>USD</option>
+                </select>
+              </label>
+              <label>Montant
+                <input id="transferAmount" type="number" min="0.01" step="0.01" value="10.00">
+              </label>
+            </div>
+            <label>Description
+              <input id="transferDescription" value="Virement test depuis demo.html">
+            </label>
+            <div class="actions">
+              <button onclick="transfer()">Virement</button>
+              <button class="secondary" onclick="triggerLargeTransfer()">Gros virement alerte</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="result-head">
+          <h2>Resultat</h2>
+          <div class="actions">
+            <button class="secondary" onclick="copyResult()">Copier</button>
+            <button class="secondary" onclick="clearResult()">Effacer</button>
+          </div>
+        </div>
+        <pre id="result">Ouvre cette page depuis http://localhost:3000/demo.html ou http://localhost:8080/demo.html, clique Health, puis connecte-toi avec un compte demo.</pre>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const demoUsers = {
+      admin: { email: "admin@bankcore.local", password: "Password123!" },
+      employee: { email: "employee@bankcore.local", password: "Password123!" },
+      reviewer: { email: "reviewer@bankcore.local", password: "Password123!" },
+      alice: { email: "alice@bankcore.local", password: "Password123!" },
+      bob: { email: "bob@bankcore.local", password: "Password123!" },
+      claire: { email: "claire@bankcore.local", password: "Password123!" },
+      diego: { email: "diego@bankcore.local", password: "Password123!" },
+      emma: { email: "emma@bankcore.local", password: "Password123!" },
+      sofia: { email: "sofia@bankcore.local", password: "Password123!" }
+    };
+
+    const state = {
+      token: localStorage.getItem("bankcore.accessToken") || "",
+      session: JSON.parse(localStorage.getItem("bankcore.session") || "null"),
+      accounts: [],
+      selectedAccountId: ""
+    };
+
+    const API_BASE = location.port === "8080" ? "" : "http://localhost:8080";
+
+    function shortId(value) {
+      if (!value) return "-";
+      return String(value).length > 18 ? `${String(value).slice(0, 8)}...${String(value).slice(-6)}` : value;
+    }
+
+    function setPill(id, mode, text) {
+      const el = document.getElementById(id);
+      el.className = `pill ${mode}`;
+      el.textContent = text;
+    }
+
+    function setResult(title, data) {
+      const timestamp = new Date().toISOString();
+      const body = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+      document.getElementById("result").textContent = `[${timestamp}] ${title}\n\n${body}`;
+    }
+
+    function appendResult(title, data) {
+      const current = document.getElementById("result").textContent;
+      const timestamp = new Date().toISOString();
+      const body = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+      document.getElementById("result").textContent = `${current}\n\n[${timestamp}] ${title}\n${body}`;
+    }
+
+    function clearResult() {
+      document.getElementById("result").textContent = "";
+    }
+
+    async function copyResult() {
+      await navigator.clipboard.writeText(document.getElementById("result").textContent);
+    }
+
+    function authHeaders() {
+      return state.token ? { Authorization: `Bearer ${state.token}` } : {};
+    }
+
+    async function api(path, options = {}) {
+      const headers = {
+        Accept: "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...authHeaders(),
+        ...(options.headers || {})
+      };
+
+      const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      const text = await response.text();
+      let data = text;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = text;
+        }
+      }
+
+      if (!response.ok) {
+        const error = new Error(data && data.message ? data.message : `HTTP ${response.status}`);
+        error.status = response.status;
+        error.data = data;
+        throw error;
+      }
+
+      return data || { status: response.status };
+    }
+
+    async function apiExpected(path, options = {}) {
+      const headers = {
+        Accept: "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...authHeaders(),
+        ...(options.headers || {})
+      };
+      const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      const text = await response.text();
+      let data = text;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = text;
+        }
+      }
+      return { status: response.status, ok: response.ok, body: data };
+    }
+
+    async function checkHealth() {
+      try {
+        const data = await api("/actuator/health");
+        setPill("apiStatus", "ok", `API ${data.status}`);
+        setResult("Health", data);
+      } catch (error) {
+        setPill("apiStatus", "bad", "API hors ligne");
+        setResult("Health error", error.data || error.message);
+      }
+    }
+
+    async function loginAs(key) {
+      try {
+        const credentials = demoUsers[key];
+        const data = await api("/api/v1/auth/login", {
+          method: "POST",
+          body: JSON.stringify(credentials)
+        });
+        state.token = data.accessToken;
+        state.session = data;
+        localStorage.setItem("bankcore.accessToken", state.token);
+        localStorage.setItem("bankcore.session", JSON.stringify(data));
+        updateSession();
+        setResult(`Login ${credentials.email}`, {
+          email: data.email,
+          role: data.role,
+          tokenType: data.tokenType,
+          expiresAt: data.expiresAt,
+          hasAccessToken: Boolean(data.accessToken),
+          hasRefreshToken: Boolean(data.refreshToken)
+        });
+      } catch (error) {
+        setResult("Login error", error.data || error.message);
+      }
+    }
+
+    function clearSession() {
+      state.token = "";
+      state.session = null;
+      state.accounts = [];
+      localStorage.removeItem("bankcore.accessToken");
+      localStorage.removeItem("bankcore.session");
+      updateSession();
+      renderAccounts([]);
+      setResult("Session locale effacee", "Reconnecte-toi avec un compte demo.");
+    }
+
+    function updateSession() {
+      if (state.session && state.token) {
+        setPill("authStatus", "ok", state.session.role || "Connecte");
+        document.getElementById("sessionInfo").innerHTML = `
+          <div><span>Email</span><span>${state.session.email || "-"}</span></div>
+          <div><span>Role</span><span>${state.session.role || "-"}</span></div>
+          <div><span>User ID</span><span>${shortId(state.session.userId)}</span></div>
+          <div><span>Token</span><span>${shortId(state.token)}</span></div>
+        `;
+      } else {
+        setPill("authStatus", "warn", "Non connecte");
+        document.getElementById("sessionInfo").innerHTML = `
+          <div><span>Email</span><span>-</span></div>
+          <div><span>Role</span><span>-</span></div>
+          <div><span>User ID</span><span>-</span></div>
+          <div><span>Token</span><span>-</span></div>
+        `;
+      }
+    }
+
+    async function getMe() {
+      try {
+        const data = await api("/api/v1/auth/me");
+        setResult("GET /api/v1/auth/me", data);
+      } catch (error) {
+        setResult("GET /api/v1/auth/me error", error.data || error.message);
+      }
+    }
+
+    async function loadDashboard() {
+      try {
+        const data = await api("/api/v1/admin/dashboard");
+        setResult("GET /api/v1/admin/dashboard", data);
+      } catch (error) {
+        setResult("Dashboard error", error.data || error.message);
+      }
+    }
+
+    async function loadCustomers() {
+      try {
+        const data = await api("/api/v1/customers");
+        setResult("GET /api/v1/customers", data);
+      } catch (error) {
+        setResult("Customers error", error.data || error.message);
+      }
+    }
+
+    async function loadAlerts() {
+      try {
+        const data = await api("/api/v1/alerts");
+        setResult("GET /api/v1/alerts", data);
+      } catch (error) {
+        setResult("Alerts error", error.data || error.message);
+      }
+    }
+
+    async function loadAuditLogs() {
+      try {
+        const data = await api("/api/v1/audit-logs");
+        setResult("GET /api/v1/audit-logs", data);
+      } catch (error) {
+        setResult("Audit logs error", error.data || error.message);
+      }
+    }
+
+    async function loadAccounts() {
+      try {
+        const data = await api("/api/v1/accounts");
+        state.accounts = Array.isArray(data) ? data : [];
+        if (!state.selectedAccountId && state.accounts.length > 0) {
+          state.selectedAccountId = state.accounts[0].id;
+        }
+        renderAccounts(state.accounts);
+        setResult("GET /api/v1/accounts", data);
+      } catch (error) {
+        setResult("Accounts error", error.data || error.message);
+      }
+    }
+
+    function accountLabel(account) {
+      if (!account) return "";
+      return `${account.currency} ${account.balance} - ${account.iban} (${shortId(account.id)})`;
+    }
+
+    function fillAccountSelect(id, accounts, selectedId) {
+      const select = document.getElementById(id);
+      select.innerHTML = "";
+      for (const account of accounts) {
+        const option = document.createElement("option");
+        option.value = account.id;
+        option.textContent = accountLabel(account);
+        if (account.id === selectedId) option.selected = true;
+        select.appendChild(option);
+      }
+    }
+
+    function renderAccounts(accounts) {
+      const tbody = document.getElementById("accountsTable");
+      if (!accounts.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">Aucun compte visible pour cette session.</td></tr>';
+      } else {
+        tbody.innerHTML = accounts.map(account => `
+          <tr>
+            <td><input type="radio" name="selectedAccount" ${account.id === state.selectedAccountId ? "checked" : ""} onclick="selectAccount('${account.id}')"></td>
+            <td class="nowrap">${account.iban}</td>
+            <td>${account.accountType}</td>
+            <td>${account.currency}</td>
+            <td>${account.balance}</td>
+            <td>${account.status}</td>
+            <td>${shortId(account.customerId)}</td>
+          </tr>
+        `).join("");
+      }
+
+      fillAccountSelect("operationAccount", accounts, state.selectedAccountId || (accounts[0] && accounts[0].id));
+      fillAccountSelect("transferSource", accounts, accounts[0] && accounts[0].id);
+      fillAccountSelect("transferTarget", accounts, accounts[1] && accounts[1].id);
+
+      const selected = accounts.find(account => account.id === state.selectedAccountId) || accounts[0];
+      if (selected) {
+        document.getElementById("operationCurrency").value = selected.currency;
+        document.getElementById("transferCurrency").value = selected.currency;
+      }
+    }
+
+    function selectAccount(id) {
+      state.selectedAccountId = id;
+      const selected = state.accounts.find(account => account.id === id);
+      if (selected) {
+        document.getElementById("operationAccount").value = id;
+        document.getElementById("operationCurrency").value = selected.currency;
+        document.getElementById("transferSource").value = id;
+        document.getElementById("transferCurrency").value = selected.currency;
+      }
+    }
+
+    function selectedAccountId() {
+      return state.selectedAccountId || document.getElementById("operationAccount").value;
+    }
+
+    async function loadSelectedTransactions() {
+      const accountId = selectedAccountId();
+      if (!accountId) return setResult("Transactions", "Aucun compte selectionne.");
+      try {
+        const data = await api(`/api/v1/accounts/${accountId}/transactions`);
+        setResult(`GET /api/v1/accounts/${accountId}/transactions`, data);
+      } catch (error) {
+        setResult("Transactions error", error.data || error.message);
+      }
+    }
+
+    async function loadSelectedStatement() {
+      const accountId = selectedAccountId();
+      if (!accountId) return setResult("Releve", "Aucun compte selectionne.");
+      try {
+        const data = await api(`/api/v1/accounts/${accountId}/statement`);
+        setResult(`GET /api/v1/accounts/${accountId}/statement`, data);
+      } catch (error) {
+        setResult("Statement error", error.data || error.message);
+      }
+    }
+
+    async function deposit() {
+      const accountId = document.getElementById("operationAccount").value;
+      const body = {
+        amount: document.getElementById("operationAmount").value,
+        currency: document.getElementById("operationCurrency").value,
+        description: document.getElementById("operationDescription").value,
+        allowFrozenAdminOverride: false
+      };
+      try {
+        const data = await api(`/api/v1/accounts/${accountId}/deposit`, {
+          method: "POST",
+          body: JSON.stringify(body)
+        });
+        setResult("Depot OK", data);
+        await loadAccounts();
+      } catch (error) {
+        setResult("Depot error", error.data || error.message);
+      }
+    }
+
+    async function withdraw() {
+      const accountId = document.getElementById("operationAccount").value;
+      const body = {
+        amount: document.getElementById("operationAmount").value,
+        currency: document.getElementById("operationCurrency").value,
+        description: document.getElementById("operationDescription").value
+      };
+      try {
+        const data = await api(`/api/v1/accounts/${accountId}/withdraw`, {
+          method: "POST",
+          body: JSON.stringify(body)
+        });
+        setResult("Retrait OK", data);
+        await loadAccounts();
+      } catch (error) {
+        setResult("Retrait error", error.data || error.message);
+      }
+    }
+
+    async function transfer() {
+      const body = {
+        sourceAccountId: document.getElementById("transferSource").value,
+        targetAccountId: document.getElementById("transferTarget").value,
+        amount: document.getElementById("transferAmount").value,
+        currency: document.getElementById("transferCurrency").value,
+        description: document.getElementById("transferDescription").value
+      };
+      try {
+        const data = await api("/api/v1/transfers", {
+          method: "POST",
+          body: JSON.stringify(body)
+        });
+        setResult("Virement OK", data);
+        await loadAccounts();
+      } catch (error) {
+        setResult("Virement error", error.data || error.message);
+      }
+    }
+
+    async function triggerLargeTransfer() {
+      document.getElementById("transferAmount").value = "10001.00";
+      await transfer();
+      appendResult("Verification alertes", "Connecte-toi admin/employee puis clique GET /alerts si l'utilisateur actuel n'a pas les droits.");
+    }
+
+    async function testForbiddenAccess() {
+      await loginAs("alice");
+      const result = await apiExpected("/api/v1/admin/dashboard");
+      const ok = result.status === 403;
+      setResult("Test BOLA / role client vers dashboard admin", {
+        expected: 403,
+        actual: result.status,
+        passed: ok,
+        response: result.body
+      });
+    }
+
+    async function runSmokeTest() {
+      clearResult();
+      await checkHealth();
+
+      await loginAs("admin");
+      const adminMe = await apiExpected("/api/v1/auth/me");
+      appendResult("Admin /me", adminMe);
+      const dashboard = await apiExpected("/api/v1/admin/dashboard");
+      appendResult("Admin dashboard", dashboard);
+      const accounts = await apiExpected("/api/v1/accounts");
+      appendResult("Admin accounts", {
+        status: accounts.status,
+        count: Array.isArray(accounts.body) ? accounts.body.length : null,
+        body: accounts.body
+      });
+      if (Array.isArray(accounts.body)) {
+        state.accounts = accounts.body;
+        renderAccounts(state.accounts);
+      }
+
+      await loginAs("alice");
+      const aliceMe = await apiExpected("/api/v1/auth/me");
+      appendResult("Alice /me", aliceMe);
+      const aliceAccounts = await apiExpected("/api/v1/accounts");
+      appendResult("Alice accounts", {
+        status: aliceAccounts.status,
+        count: Array.isArray(aliceAccounts.body) ? aliceAccounts.body.length : null,
+        body: aliceAccounts.body
+      });
+      const forbidden = await apiExpected("/api/v1/admin/dashboard");
+      appendResult("Alice dashboard admin attendu 403", {
+        expected: 403,
+        actual: forbidden.status,
+        passed: forbidden.status === 403,
+        body: forbidden.body
+      });
+
+      if (Array.isArray(aliceAccounts.body)) {
+        state.accounts = aliceAccounts.body;
+        renderAccounts(state.accounts);
+      }
+    }
+
+    updateSession();
+    checkHealth();
+  </script>
+</body>
+</html>

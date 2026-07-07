@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bankcore-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bankcore}
+      POSTGRES_USER: ${POSTGRES_USER:-bankcore}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bankcore_dev_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - bankcore-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bankcore} -d ${POSTGRES_DB:-bankcore}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: bankcore-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-bankcore}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-bankcore}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-bankcore_dev_password}
+      JWT_SECRET: ${JWT_SECRET:-change_me_use_very_long_secret_at_least_32_characters}
+      JWT_ACCESS_EXPIRATION_MINUTES: ${JWT_ACCESS_EXPIRATION_MINUTES:-30}
+      JWT_REFRESH_EXPIRATION_DAYS: ${JWT_REFRESH_EXPIRATION_DAYS:-7}
+    ports:
+      - "8080:8080"
+
+volumes:
+  bankcore-postgres-data:

@@ -1,0 +1,11 @@
+create index idx_users_email on users(email);
+create index idx_customers_user_id on customer_profiles(user_id);
+create index idx_accounts_customer_id on bank_accounts(customer_id);
+create index idx_accounts_iban on bank_accounts(iban);
+create index idx_transactions_source_account_id on bank_transactions(source_account_id);
+create index idx_transactions_target_account_id on bank_transactions(target_account_id);
+create index idx_transactions_created_at on bank_transactions(created_at);
+create index idx_audit_logs_actor_user_id on audit_logs(actor_user_id);
+create index idx_audit_logs_created_at on audit_logs(created_at);
+create index idx_alerts_status on suspicious_activity_alerts(status);
+create index idx_alerts_account_id on suspicious_activity_alerts(account_id);
