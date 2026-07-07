@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BankCore API - Console de test</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23136f63'/%3E%3Ctext x='50' y='68' font-size='52' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
   <style>
     :root {
       color-scheme: light;
@@ -426,7 +427,7 @@
             <h3>Depot / retrait admin</h3>
             <div class="grid">
               <label>Compte
-                <select id="operationAccount"></select>
+                <select id="operationAccount" onchange="syncOperationCurrency()"></select>
               </label>
               <label>Devise
                 <select id="operationCurrency">
@@ -452,10 +453,11 @@
             <h3>Virement interne</h3>
             <div class="grid">
               <label>Compte source
-                <select id="transferSource"></select>
+                <select id="transferSource" onchange="syncTransferDefaults()"></select>
               </label>
-              <label>Compte cible
-                <select id="transferTarget"></select>
+              <label>Compte cible (UUID)
+                <input id="transferTarget" list="targetAccountOptions" placeholder="UUID du compte cible">
+                <datalist id="targetAccountOptions"></datalist>
               </label>
               <label>Devise
                 <select id="transferCurrency">
@@ -475,6 +477,9 @@
               <button onclick="transfer()">Virement</button>
               <button class="secondary" onclick="triggerLargeTransfer()">Gros virement alerte</button>
             </div>
+            <p class="muted">
+              La cible accepte n'importe quel UUID de compte (meme devise). Les suggestions incluent tes comptes et des beneficiaires seed demo.
+            </p>
           </div>
         </div>
       </section>
@@ -511,6 +516,13 @@
       accounts: [],
       selectedAccountId: ""
     };
+
+    // Stable UUIDs from the Flyway seed migrations, so customers can target accounts they cannot list.
+    const demoBeneficiaries = [
+      { id: "20000000-0000-0000-0000-000000000003", currency: "CHF", label: "CHF - Bob (beneficiaire seed demo)" },
+      { id: "20000000-0000-0000-0000-000000000010", currency: "EUR", label: "EUR - Sofia (beneficiaire seed demo)" },
+      { id: "20000000-0000-0000-0000-000000000005", currency: "USD", label: "USD - Claire (beneficiaire seed demo)" }
+    ];
 
     const API_BASE = location.port === "8080" ? "" : "http://localhost:8080";
 
@@ -610,7 +622,7 @@
       }
     }
 
-    async function loginAs(key) {
+    async function loginAs(key, silent = false) {
       try {
         const credentials = demoUsers[key];
         const data = await api("/api/v1/auth/login", {
@@ -622,6 +634,7 @@
         localStorage.setItem("bankcore.accessToken", state.token);
         localStorage.setItem("bankcore.session", JSON.stringify(data));
         updateSession();
+        if (silent) return;
         setResult(`Login ${credentials.email}`, {
           email: data.email,
           role: data.role,
@@ -761,14 +774,53 @@
       }
 
       fillAccountSelect("operationAccount", accounts, state.selectedAccountId || (accounts[0] && accounts[0].id));
-      fillAccountSelect("transferSource", accounts, accounts[0] && accounts[0].id);
-      fillAccountSelect("transferTarget", accounts, accounts[1] && accounts[1].id);
+      fillAccountSelect("transferSource", accounts, state.selectedAccountId || (accounts[0] && accounts[0].id));
+      fillTargetOptions(accounts);
+      syncOperationCurrency();
+      syncTransferDefaults();
+    }
 
-      const selected = accounts.find(account => account.id === state.selectedAccountId) || accounts[0];
-      if (selected) {
-        document.getElementById("operationCurrency").value = selected.currency;
-        document.getElementById("transferCurrency").value = selected.currency;
+    function fillTargetOptions(accounts) {
+      const datalist = document.getElementById("targetAccountOptions");
+      datalist.innerHTML = "";
+      const seen = new Set();
+      for (const account of accounts) {
+        seen.add(account.id);
+        const option = document.createElement("option");
+        option.value = account.id;
+        option.label = accountLabel(account);
+        datalist.appendChild(option);
       }
+      for (const beneficiary of demoBeneficiaries) {
+        if (seen.has(beneficiary.id)) continue;
+        const option = document.createElement("option");
+        option.value = beneficiary.id;
+        option.label = beneficiary.label;
+        datalist.appendChild(option);
+      }
+    }
+
+    function pickDefaultTarget(sourceId) {
+      const source = state.accounts.find(account => account.id === sourceId);
+      if (!source) return "";
+      const own = state.accounts.find(account =>
+        account.id !== source.id && account.currency === source.currency && account.status === "ACTIVE");
+      if (own) return own.id;
+      const beneficiary = demoBeneficiaries.find(b => b.currency === source.currency && b.id !== source.id);
+      return beneficiary ? beneficiary.id : "";
+    }
+
+    function syncOperationCurrency() {
+      const account = state.accounts.find(a => a.id === document.getElementById("operationAccount").value);
+      if (account) document.getElementById("operationCurrency").value = account.currency;
+    }
+
+    function syncTransferDefaults() {
+      const sourceId = document.getElementById("transferSource").value;
+      const source = state.accounts.find(account => account.id === sourceId);
+      if (!source) return;
+      document.getElementById("transferCurrency").value = source.currency;
+      document.getElementById("transferTarget").value = pickDefaultTarget(sourceId);
     }
 
     function selectAccount(id) {
@@ -776,9 +828,9 @@
       const selected = state.accounts.find(account => account.id === id);
       if (selected) {
         document.getElementById("operationAccount").value = id;
-        document.getElementById("operationCurrency").value = selected.currency;
         document.getElementById("transferSource").value = id;
-        document.getElementById("transferCurrency").value = selected.currency;
+        syncOperationCurrency();
+        syncTransferDefaults();
       }
     }
 
@@ -848,13 +900,20 @@
     }
 
     async function transfer() {
+      const targetAccountId = document.getElementById("transferTarget").value.trim();
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetAccountId)) {
+        return setResult("Virement error", "Compte cible invalide: renseigne un UUID de compte (choisis une suggestion de la liste).");
+      }
       const body = {
         sourceAccountId: document.getElementById("transferSource").value,
-        targetAccountId: document.getElementById("transferTarget").value,
+        targetAccountId,
         amount: document.getElementById("transferAmount").value,
         currency: document.getElementById("transferCurrency").value,
         description: document.getElementById("transferDescription").value
       };
+      if (body.sourceAccountId === body.targetAccountId) {
+        return setResult("Virement error", "Le compte source et le compte cible doivent etre differents.");
+      }
       try {
         const data = await api("/api/v1/transfers", {
           method: "POST",
@@ -889,7 +948,8 @@
       clearResult();
       await checkHealth();
 
-      await loginAs("admin");
+      await loginAs("admin", true);
+      appendResult("Login admin", { role: state.session.role });
       const adminMe = await apiExpected("/api/v1/auth/me");
       appendResult("Admin /me", adminMe);
       const dashboard = await apiExpected("/api/v1/admin/dashboard");
@@ -905,7 +965,8 @@
         renderAccounts(state.accounts);
       }
 
-      await loginAs("alice");
+      await loginAs("alice", true);
+      appendResult("Login alice", { role: state.session.role });
       const aliceMe = await apiExpected("/api/v1/auth/me");
       appendResult("Alice /me", aliceMe);
       const aliceAccounts = await apiExpected("/api/v1/accounts");
